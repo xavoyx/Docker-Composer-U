@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker-Composer-U | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; }
+        .btn { transition: all 0.2s; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
+        .status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; }
+        footer { margin-top: auto; }
+
+        /* Animation für den GitHub-Link in der Bar */
+        .dev-bar a:hover { text-decoration: underline; opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="dev-bar w-full bg-slate-900 text-white text-[11px] py-2 px-4 flex justify-center items-center gap-2 font-medium tracking-wide uppercase">
+    <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+    Dieses Tool befindet sich in aktiver Entwicklung. Regelmäßige Updates erscheinen auf
+    <a href="https://github.com/Xavoyx/Docker-Composer-U" target="_blank" class="text-blue-400 font-bold ml-1 flex items-center gap-1">
+        GitHub ↗
+    </a>
+</div>
+
+<div class="max-w-5xl mx-auto w-full p-4 md:p-12">
+    <header class="mb-8 flex justify-between items-end">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Docker-Composer-U</h1>
+            <p class="text-slate-500 text-sm">Zentrales Container Management</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-[10px] font-mono bg-slate-200 text-slate-600 px-2 py-1 rounded">v1.1.0-stable</span>
+            <button onclick="refresh()" class="btn border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2 rounded-lg text-slate-600 shadow-sm">
+                Refresh
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="card p-4 text-center">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total</span>
+            <div id="stat-total" class="text-xl font-bold text-slate-900">0</div>
+        </div>
+        <div class="card p-4 text-center border-b-2 border-b-emerald-500">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-600">Running</span>
+            <div id="stat-running" class="text-xl font-bold text-emerald-600">0</div>
+        </div>
+        <div class="card p-4 text-center border-b-2 border-b-slate-400">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Stopped</span>
+            <div id="stat-stopped" class="text-xl font-bold text-slate-400">0</div>
+        </div>
+    </div>
+
+    <div class="card overflow-hidden shadow-sm mb-12">
+        <div class="bg-slate-50 border-b border-slate-100 px-6 py-3 grid grid-cols-12 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <div class="col-span-6 md:col-span-7">Instanz & Image</div>
+            <div class="col-span-2 text-center">Status</div>
+            <div class="col-span-4 md:col-span-3 text-right">Aktionen</div>
+        </div>
+        <div id="list" class="divide-y divide-slate-100">
+            <div class="p-12 text-center text-slate-400 text-xs italic">Lade Systemdaten...</div>
+        </div>
+    </div>
+</div>
+
+<footer class="max-w-5xl mx-auto w-full border-t border-slate-200 pt-8 pb-12 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Entwickler</h4>
+            <p class="text-sm text-slate-500 leading-relaxed">
+                Entwickelt von <strong>Xavo</strong>. <br>
+                Fokus auf minimalistische Docker-Tools und effiziente Workflows.
+            </p>
+        </div>
+        <div>
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Impressum</h4>
+            <p class="text-[11px] text-slate-500 leading-tight">
+                Angaben gemäß § 5 TMG:<br>
+                Finn Conradt / Xavoyx<br>
+                Jenaer Str. 20, 34246 Vellmar<br>
+                Kontakt: heyfinnc@mail.com
+            </p>
+        </div>
+        <div>
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Datenschutz</h4>
+            <p class="text-[11px] text-slate-500 leading-tight italic">
+                Dieses Dashboard läuft lokal. Es werden keine personenbezogenen Daten an externe Server übertragen. Die Kommunikation findet ausschließlich zwischen diesem Browser und deinem lokalen Docker-Daemon statt.
+            </p>
+        </div>
+    </div>
+    <div class="mt-12 text-center">
+        <span class="text-[10px] font-mono text-slate-300">© 2026 Docker-Composer-U — Build Version 1.1.0</span>
+    </div>
+</footer>
+
+<div id="logModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Container Logs</span>
+            <button onclick="closeLogs()" class="text-slate-400 hover:text-slate-900 font-bold text-lg">&times;</button>
+        </div>
+        <pre id="logContent" class="p-6 bg-slate-950 text-slate-300 font-mono text-[11px] overflow-y-auto max-h-[500px] leading-relaxed"></pre>
+    </div>
+</div>
+
+<script>
+    async function refresh() {
+        try {
+            const res = await fetch('/api/containers');
+            const data = await res.json();
+            document.getElementById('stat-total').innerText = data.length;
+            document.getElementById('stat-running').innerText = data.filter(c => c.status === 'running').length;
+            document.getElementById('stat-stopped').innerText = data.filter(c => c.status !== 'running').length;
+            const list = document.getElementById('list');
+            list.innerHTML = data.map(c => `
+                <div class="px-6 py-5 grid grid-cols-12 items-center hover:bg-slate-50/50 transition">
+                    <div class="col-span-6 md:col-span-7">
+                        <div class="font-bold text-slate-900 text-sm">${c.name}</div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">${c.image}</div>
+                    </div>
+                    <div class="col-span-2 text-center">
+                        <span class="status-badge ${c.status === 'running' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+                            ${c.status}
+                        </span>
+                    </div>
+                    <div class="col-span-4 md:col-span-3 flex justify-end gap-1.5">
+                        <button onclick="act(this, 'start', '${c.id}')" class="btn px-3 py-1.5 rounded-md border border-slate-200 hover:bg-slate-900 hover:text-white">Start</button>
+                        <button onclick="act(this, 'stop', '${c.id}')" class="btn px-3 py-1.5 rounded-md border border-slate-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50">Stop</button>
+                        <button onclick="showLogs('${c.id}')" class="btn px-3 py-1.5 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200">Logs</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { console.error("Update failed"); }
+    }
+
+    async function act(btn, type, id) {
+        const originalText = btn.innerText;
+        btn.innerText = '...';
+        btn.disabled = true;
+        try {
+            await fetch('/api/action/' + type + '/' + id, { method: 'POST' });
+            setTimeout(refresh, 800);
+        } catch (e) { alert("Error"); }
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+
+    async function showLogs(id) {
+        const res = await fetch('/api/logs/' + id);
+        const text = await res.text();
+        document.getElementById('logContent').innerText = text || "No logs found.";
+        document.getElementById('logModal').classList.remove('hidden');
+    }
+
+    function closeLogs() { document.getElementById('logModal').classList.add('hidden'); }
+    window.addEventListener('keydown', (e) => { if (e.key === "Escape") closeLogs(); });
+
+    setInterval(refresh, 5000);
+    refresh();
+</script>
+</body>
+</html>
